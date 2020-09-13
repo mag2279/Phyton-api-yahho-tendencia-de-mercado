@@ -1,0 +1,49 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import yfinance as yf
+import random
+import talib
+import sys
+import io
+
+import datetime as dt
+
+def cotizaciones(acciones):
+    df = pd.DataFrame(yf.download(acciones,period= "4mo"))  
+    return df
+
+def evaluar(datos):
+    resultado = ""
+    datos['media4']  = datos['Close'].rolling(window=4, min_periods=0).mean()
+    datos['media40'] = datos['Close'].rolling(window=40, min_periods=0).mean()
+
+    media4  = datos['media4'].tail(1)[0]
+    media40 = datos['media40'].tail(1)[0]
+    close   = datos['Close'].tail(1)[0]
+
+    if close - media4 > 0 and close - media40 > 0:
+        resultado = "Alcista"
+    elif close - media4 < 0 and close - media40 < 0:
+        resultado = "Bajista"
+    else:
+        resultado = "Lateral"
+    return resultado
+
+stocks = ['GGAL.BA','BYMA.BA', 'COME.BA',"ALUA.BA","CVH.BA","EDN.BA","PAMP.BA",
+          "TGNO4.BA","YPFD.BA","BOLT.BA","CARC.BA","AGRO.BA","PGR.BA","MORI.BA"]
+
+resultados = []
+ 
+for un_stock in stocks:
+    df = cotizaciones(un_stock)
+    resultado = evaluar(df)
+    resultados.append(resultado)
+    print("La accion {0} esta {1}".format(un_stock, resultado))
+    
+
+df_stocks = pd.DataFrame(resultados, stocks)
+df_stocks.reset_index(drop=False, inplace=True)
+df_stocks.rename(columns= {'index':'stock', 0:'tendencia'}, inplace=True)
+
+df_stocks
